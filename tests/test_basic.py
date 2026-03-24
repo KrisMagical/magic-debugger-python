@@ -81,29 +81,23 @@ class TestStateModel:
         assert "program" in summary
 
 
-class TestLLDBAdapter:
-    """LLDB 适配器测试"""
+class TestGDBAdapter:
+    """GDB 适配器测试"""
     
     def test_adapter_initialization(self):
-        """测试适配器初始化"""
-        from adapters.lldb import LLDBAdapter, LLDBConfig
-        
-        config = LLDBConfig()
-        adapter = LLDBAdapter(config)
-        
+        from adapters.gdb import GDBAdapter, GDBConfig
+        config = GDBConfig()
+        adapter = GDBAdapter(config)
         assert adapter.config is not None
     
     def test_launch_arguments(self):
-        """测试启动参数生成"""
-        from adapters.lldb import LLDBAdapter
-        
-        adapter = LLDBAdapter()
+        from adapters.gdb import GDBAdapter
+        adapter = GDBAdapter()
         args = adapter.get_launch_arguments(
             program="/path/to/program",
             args=["--help"],
             cwd="/home/user"
         )
-        
         assert args["program"] == "/path/to/program"
         assert args["args"] == ["--help"]
         assert args["cwd"] == "/home/user"
