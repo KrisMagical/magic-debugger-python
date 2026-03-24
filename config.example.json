@@ -1,0 +1,28 @@
+{
+    "server": {
+        "socket_path": "/tmp/magic-debug.sock",
+        "http_host": "127.0.0.1",
+        "http_port": 8765
+    },
+    "debugger": {
+        "adapter": "lldb",
+        "lldb_dap_path": "lldb-dap",
+        "init_commands": [],
+        "source_maps": {}
+    },
+    "vim": {
+        "signs": {
+            "breakpoint": "B",
+            "breakpoint_cond": "C",
+            "current_line": ">"
+        },
+        "highlights": {
+            "breakpoint": "ErrorMsg",
+            "current_line": "Search"
+        }
+    },
+    "logging": {
+        "level": "INFO",
+        "file": null
+    }
+}
