@@ -20,7 +20,7 @@ from core.session import DebugSession
 from core.dap import DAPClient
 from core.state import DebugState
 from core.controller import DebugController, DebugConfig
-from adapters.lldb import LLDBAdapter, check_lldb_installation
+from adapters.gdb import GDBAdapter, check_gdb_installation
 from server.rpc import RPCServer
 from server.http import HTTPAPIServer
 
@@ -73,8 +73,8 @@ class MagicDebug:
         self.rpc_server: RPCServer = None
         self.http_server: HTTPAPIServer = None
         
-        # LLDB 适配器
-        self.lldb_adapter: LLDBAdapter = None
+        # GDB 适配器
+        self.gdb_adapter: GDBAdapter = None
         
         # 运行状态
         self._running = False
@@ -88,26 +88,31 @@ class MagicDebug:
         """
         logger = logging.getLogger(__name__)
         
-        # 检查 LLDB
-        lldb_status = check_lldb_installation()
-        if not lldb_status["available"]:
-            logger.error("LLDB not found. Please install lldb-dap.")
-            logger.error("On macOS: xcode-select --install")
-            logger.error("On Linux: apt install lldb")
+        # 检查 GDB
+        gdb_status = check_gdb_installation()
+        if not gdb_status["available"]:
+            logger.error("GDB not found. Please install GDB (version >= 11 for DAP support).")
+            logger.error("On macOS: brew install gdb")
+            logger.error("On Linux: apt install gdb")
             return False
         
-        logger.info(f"Found lldb-dap at: {lldb_status['dap_path']}")
+        logger.info(f"Found GDB at: {gdb_status['gdb_path']}")
+        logger.info(f"GDB version: {gdb_status['version']}")
         
-        # 创建 LLDB 适配器
-        self.lldb_adapter = LLDBAdapter()
-        self.lldb_adapter.dap_path = lldb_status["dap_path"]
+        # 创建 GDB 适配器
+        self.gdb_adapter = GDBAdapter()
+        self.gdb_adapter.gdb_path = gdb_status["gdb_path"]
+        
+        # 获取 GDB DAP 启动命令
+        command = self.gdb_adapter.command
+        logger.info(f"Starting GDB DAP with command: {' '.join(command)}")
         
         # 创建调试会话
-        self.session = DebugSession([self.lldb_adapter.dap_path])
+        self.session = DebugSession(command)
         
-        # 启动 lldb-dap 进程
+        # 启动 GDB 进程
         if not self.session.start():
-            logger.error("Failed to start lldb-dap")
+            logger.error("Failed to start GDB DAP")
             return False
         
         # 创建 DAP 客户端
@@ -247,7 +252,7 @@ Examples:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="Check LLDB installation and exit"
+        help="Check GDB installation and exit"
     )
     parser.add_argument(
         "--version",
@@ -263,7 +268,7 @@ Examples:
     
     # 检查安装
     if args.check:
-        status = check_lldb_installation()
+        status = check_gdb_installation()
         print(json.dumps(status, indent=2))
         return 0 if status["available"] else 1
     

@@ -5,8 +5,9 @@
         "http_port": 8765
     },
     "debugger": {
-        "adapter": "lldb",
-        "lldb_dap_path": "lldb-dap",
+        "adapter": "gdb",
+        "gdb_path": "gdb",
+        "dap_args": ["--interpreter=dap"],
         "init_commands": [],
         "source_maps": {}
     },
