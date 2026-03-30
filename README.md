@@ -1,9 +1,3 @@
-
-
-```
-
-```
-
 # Magic Debug
 
 **AI 驱动的调试器** - 支持 Vim/Neovim 插件和 AI 接口
