@@ -8,13 +8,24 @@ machine as a packaging failure.
 
 Record:
 
-- Python version:
-- OS:
+- Python version: 3.10 / 3.11 / 3.12
+- OS: Linux / macOS
 - GDB version:
 - GCC version:
 - Neovim version, if testing the plugin:
 - RPC transport used: `auto` / `unix` / `tcp`
 - Notes:
+
+Required validation platforms:
+
+- Linux
+- macOS
+
+Required Python versions:
+
+- 3.10
+- 3.11
+- 3.12
 
 ## Core Smoke Test
 
@@ -50,7 +61,7 @@ debugging machine.
 
 ## GDB DAP E2E
 
-On a real Linux environment with GCC and GDB installed:
+On a real Linux or macOS environment with GCC or Clang and GDB installed:
 
 ```bash
 gcc --version
@@ -74,15 +85,6 @@ magic-debug --help
 magic-debug doctor
 ```
 
-PowerShell fallback:
-
-```powershell
-$wheel = Get-ChildItem dist\*.whl | Select-Object -First 1 -ExpandProperty FullName
-python -m pip install --force-reinstall $wheel
-magic-debug --help
-magic-debug doctor
-```
-
 Clean virtual environment option:
 
 ```bash
@@ -90,16 +92,6 @@ python -m venv .venv-release
 . .venv-release/bin/activate
 python -m pip install --upgrade pip
 python -m pip install dist/*.whl
-magic-debug --help
-```
-
-Windows activation:
-
-```powershell
-python -m venv .venv-release
-.\.venv-release\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-python -m pip install dist\*.whl
 magic-debug --help
 ```
 
@@ -145,50 +137,26 @@ Expected result:
 - Logs are visible with `:MagicDebugLogs`.
 - Response and event messages do not interfere with each other.
 
-## Windows TCP Smoke
+## Optional Future Validation
 
-```bash
-magic-debug --rpc --rpc-transport auto
-magic-debug --rpc --rpc-transport tcp --rpc-host 127.0.0.1 --rpc-port 8766
-```
-
-Expected result:
-
-- `auto` resolves to `tcp://127.0.0.1:8766` on Windows.
-- Windows users are not required to use Unix sockets.
-- Named Pipe support is not implemented in this beta.
-
-Neovim TCP configuration:
-
-```lua
-require("magic-debug").setup({
-  rpc_transport = "tcp",
-  rpc_host = "127.0.0.1",
-  rpc_port = 8766,
-  server_command = {
-    "magic-debug",
-    "--rpc",
-    "--rpc-transport",
-    "tcp",
-    "--rpc-host",
-    "127.0.0.1",
-    "--rpc-port",
-    "8766",
-  },
-})
-```
+Windows is not part of the `v0.1.0-beta` official support matrix. TCP transport
+may be useful for future Windows experiments, but Windows should not block this
+beta release.
 
 ## Pass / Fail Table
 
 | Check | Result | Notes |
 |---|---|---|
-| pytest | pass/fail/skip | |
+| Linux pytest | pass/fail/skip | |
+| macOS pytest | pass/fail/skip | |
+| Python 3.10 | pass/fail | |
+| Python 3.11 | pass/fail | |
+| Python 3.12 | pass/fail | |
 | compileall | pass/fail | |
 | doctor | ok/warn/error | |
 | check JSON | ok/warn/error | |
-| e2e GDB DAP | pass/fail/skip | |
+| e2e GDB DAP on Linux/macOS | pass/fail/skip | |
 | wheel build | pass/fail | |
 | wheel install | pass/fail | |
 | minimal C sample | pass/fail/not tested | |
 | Neovim plugin | pass/fail/not tested | |
-| Windows TCP | pass/fail/not tested | |

@@ -2,6 +2,17 @@
 
 Status: draft for beta validation.
 
+Official beta support:
+
+- Linux
+- macOS
+- Python 3.10-3.12
+
+Not officially supported:
+
+- Windows
+- Python 3.8 / 3.9
+
 ## Highlights
 
 - GDB DAP backend based on `gdb --interpreter=dap`.
@@ -9,7 +20,7 @@ Status: draft for beta validation.
 - DebugController lifecycle fixes for breakpoints, stopped state, and thread ids.
 - Stable HTTP/RPC error model.
 - Neovim RPC response/event dispatch using request ids and pending requests.
-- Cross-platform RPC transport: `auto`, `unix`, and `tcp`.
+- RPC transport modes: `auto`, `unix`, and `tcp`.
 - `magic-debug doctor` and `magic-debug --check --json` diagnostics.
 - Wheel/sdist packaging and console script validation.
 - Real GDB DAP e2e test entry with graceful skip when the environment is absent.
@@ -30,7 +41,9 @@ Status: draft for beta validation.
 
 - `runInTerminal` is unsupported and returns a clear error.
 - Neovim UI is still lightweight; it is not a full IDE-style debug panel.
-- Windows uses TCP by default; Named Pipe support is not implemented.
+- Windows is not part of the official beta support matrix.
+- Python 3.8 and 3.9 are not supported.
+- Named Pipe support is not implemented.
 - GDB DAP behavior may vary by GDB version and distribution.
 - Full variable/thread UI is not complete in this beta.
 - No AI debugging assistant behavior is included in this beta.
@@ -50,7 +63,7 @@ magic-debug --check --json
 python -m build
 ```
 
-On a real Linux validation host:
+On a real Linux or macOS validation host:
 
 ```bash
 gcc --version

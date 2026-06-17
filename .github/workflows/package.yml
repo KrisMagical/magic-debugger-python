@@ -23,4 +23,4 @@ jobs:
       - name: CLI smoke
         run: |
           magic-debug --help
-          python -c "import subprocess, sys; r = subprocess.run(['magic-debug', '--check', '--json']); sys.exit(0 if r.returncode in (0, 1) else r.returncode)"
+          python scripts/ci_check_installed_diagnostics.py

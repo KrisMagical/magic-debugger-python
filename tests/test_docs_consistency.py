@@ -37,10 +37,40 @@ def test_readme_documents_rpc_transports_and_platform_defaults():
     assert "auto" in content
     assert "unix" in content
     assert "tcp" in content
-    assert "windows" in content
-    assert "tcp" in content
     assert "linux/macos" in content
     assert "unix domain socket" in content
+    assert "windows is not" in content
+    assert "official beta support matrix" in content
+
+
+def test_readme_documents_supported_python_and_os_matrix():
+    content = read_readme_lower()
+
+    assert "linux" in content
+    assert "macos" in content
+    assert "3.10" in content
+    assert "3.11" in content
+    assert "3.12" in content
+    assert "python 3.8 and 3.9 are not supported" in content
+    assert "windows is not part of the official beta support matrix" in content
+
+
+def test_readme_does_not_claim_windows_or_old_python_support():
+    content = read_readme_lower()
+
+    forbidden = [
+        "windows default",
+        "windows defaults",
+        "windows uses tcp by default",
+        "windows official support",
+        "python `>=3.8`",
+        "python >=3.8",
+        "python 3.8 supported",
+        "python 3.9 supported",
+    ]
+
+    for phrase in forbidden:
+        assert phrase not in content
 
 
 def test_readme_does_not_present_lldb_as_current_requirement():
@@ -106,3 +136,31 @@ def test_changelog_describes_beta():
     assert "v0.1.0-beta" in content
     assert "known limitations" in content
     assert "gdb dap" in content
+
+
+def test_beta_checklist_uses_linux_macos_support_matrix():
+    content = (ROOT / "docs" / "beta-checklist.md").read_text(encoding="utf-8").lower()
+
+    assert "linux" in content
+    assert "macos" in content
+    assert "3.10" in content
+    assert "3.11" in content
+    assert "3.12" in content
+    assert "windows tcp smoke" not in content
+    assert "should not block" in content
+    assert "beta release" in content
+
+
+def test_release_notes_and_changelog_describe_support_matrix_update():
+    release_notes = (ROOT / "RELEASE_NOTES.md").read_text(encoding="utf-8").lower()
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8").lower()
+
+    assert "linux" in release_notes
+    assert "macos" in release_notes
+    assert "python 3.10-3.12" in release_notes
+    assert "windows" in release_notes
+    assert "not officially supported" in release_notes
+
+    assert "official beta support target is linux/macos" in changelog
+    assert "removed windows from the official ci/support matrix" in changelog
+    assert "removed python 3.8 and 3.9" in changelog

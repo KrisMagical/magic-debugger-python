@@ -3,7 +3,9 @@
 Magic Debug is a GDB DAP based debugger backend and Vim/Neovim integration for
 C/C++ debugging workflows.
 
-Magic Debug is currently in beta. The core GDB DAP backend, DAP framing, RPC
+Magic Debug is currently in beta. The official beta support matrix targets
+Linux and macOS with Python 3.10-3.12 and GDB DAP. Windows is not part of the
+official beta support matrix. The core GDB DAP backend, DAP framing, RPC
 transport, diagnostics, packaging, and basic Neovim integration have been
 stabilized, but users should still expect environment-specific GDB DAP
 differences.
@@ -26,20 +28,22 @@ Magic Debug provides:
 - HTTP API for tools and automation.
 - Line-delimited JSON RPC server for editor clients.
 - Neovim Lua plugin with request id based RPC response/event dispatch.
-- Cross-platform RPC transport selection: `auto`, `unix`, or `tcp`.
+- RPC transport selection: `auto`, `unix`, or `tcp`.
 - `magic-debug doctor` and `magic-debug --check --json` diagnostics.
 
 ## Requirements
 
-- Python `>=3.8`.
+- Supported OS: Linux and macOS.
+- Supported Python: 3.10, 3.11, and 3.12.
 - GDB with `gdb --interpreter=dap` support for real debugging.
-- GCC only for the minimal C example and real e2e test.
+- GCC or Clang for the minimal C example and real e2e test.
 - Neovim only if you use the Lua plugin.
 
 Platform defaults:
 
 - Linux/macOS: RPC `auto` uses Unix Domain Socket by default.
-- Windows: RPC `auto` uses TCP `127.0.0.1:8766` by default.
+- TCP remains available for local debugging, forwarding, and troubleshooting.
+- Windows is not officially supported in this beta.
 
 Missing `gdb` does not break pure Python unit tests. `magic-debug doctor` reports
 it as a warning because real debugging still needs GDB.
@@ -139,9 +143,6 @@ Compile on Linux/macOS:
 ```bash
 gcc -g -O0 tests/fixtures/test_sample.c -o /tmp/test_sample
 ```
-
-On Windows, use a GDB-capable toolchain such as MSYS2, MinGW, or WSL and compile
-an equivalent `test_sample.exe`. Native Windows GDB environments vary.
 
 Run diagnostics:
 
@@ -270,7 +271,6 @@ Fields:
 
 `auto`:
 
-- Windows resolves to TCP.
 - Linux/macOS resolves to Unix Domain Socket.
 - If POSIX Unix socket creation fails, the server can fallback to TCP and logs a
   warning.
@@ -278,14 +278,14 @@ Fields:
 `unix`:
 
 - Uses Unix Domain Socket.
-- Not suitable for Windows.
 - Configure with `--rpc-socket`.
 
 `tcp`:
 
 - Uses host/port.
 - Default endpoint is `127.0.0.1:8766`.
-- Recommended for Windows and cross-process connections.
+- Useful for local troubleshooting, port forwarding, and cross-process
+  connections on supported platforms.
 
 CLI examples:
 
@@ -295,7 +295,7 @@ magic-debug --rpc --rpc-transport tcp --rpc-host 127.0.0.1 --rpc-port 8766
 magic-debug --rpc --rpc-transport unix --rpc-socket /tmp/magic-debug.sock
 ```
 
-Windows TCP plugin example:
+TCP plugin example:
 
 ```lua
 require("magic-debug").setup({
@@ -315,8 +315,8 @@ require("magic-debug").setup({
 })
 ```
 
-Windows does not use Unix sockets by default. Windows Named Pipe support is not
-implemented in this beta.
+Windows is not part of the official beta support matrix. Named Pipe support is
+not implemented.
 
 ## Doctor And Check
 
@@ -444,7 +444,6 @@ test may skip when DAP is unavailable.
 
 - Open `:MagicDebugLogs`.
 - Check `--rpc-transport`.
-- On Windows, prefer TCP.
 - On Linux/macOS, check the socket path.
 - Try `--rpc-transport tcp`.
 
@@ -473,18 +472,15 @@ Then inspect `:MagicDebugLogs`.
 - Use a source path that GDB can match, preferably an absolute path.
 - Confirm `configurationDone` and `continue` have run.
 
-### Windows notes
-
-Windows defaults to TCP. Native Windows GDB setups differ; MSYS2, MinGW, or WSL
-may be easier for C/C++ debugging.
-
 ## Current Limitations
 
 - Current backend focus is GDB DAP, not LLDB.
 - `runInTerminal` is not implemented and returns a clear unsupported error.
 - The Neovim UI is intentionally minimal and is not a full IDE-style panel set.
 - Real e2e tests require GCC plus GDB DAP and skip when unavailable.
-- Windows uses TCP by default; Windows Named Pipe support is not implemented.
+- Windows is not part of the official beta support matrix.
+- Python 3.8 and 3.9 are not supported.
+- Windows Named Pipe support is not implemented.
 - GDB DAP launch parameters can vary by GDB version.
 - Full variable tree UI, complex thread UI, AI debugging assistant behavior, and
   remote team workflows are not currently promised.

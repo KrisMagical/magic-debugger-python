@@ -16,3 +16,14 @@ def test_license_file_is_included_in_manifest():
 
     manifest = (ROOT / "MANIFEST.in").read_text(encoding="utf-8")
     assert "include LICENSE" in manifest
+
+
+def test_pyproject_declares_supported_python_versions():
+    content = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+
+    assert 'requires-python = ">=3.10"' in content
+    assert "Programming Language :: Python :: 3.8" not in content
+    assert "Programming Language :: Python :: 3.9" not in content
+    assert "Programming Language :: Python :: 3.10" in content
+    assert "Programming Language :: Python :: 3.11" in content
+    assert "Programming Language :: Python :: 3.12" in content

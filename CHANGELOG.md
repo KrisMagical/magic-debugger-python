@@ -7,7 +7,6 @@
 - GDB DAP backend validation around `gdb --interpreter=dap`.
 - `magic-debug doctor` and `magic-debug --check --json`.
 - RPC transport modes: `auto`, `unix`, and `tcp`.
-- Windows TCP default for RPC auto mode.
 - Linux/macOS Unix socket default for RPC auto mode.
 - HTTP/RPC structured error payloads.
 - Neovim RPC request id, pending request, and response/event dispatch.
@@ -38,6 +37,10 @@
 ### Changed
 
 - README rewritten for the current GDB DAP beta.
+- Official beta support target is Linux/macOS with Python 3.10-3.12.
+- Removed Windows from the official CI/support matrix.
+- Removed Python 3.8 and 3.9 from the official support matrix.
+- Windows validation is deferred.
 - `setup.py` reduced to a compatibility shim.
 - `pyproject.toml` metadata improved and console script verified.
 - `config.example.json` updated to current launch and RPC transport fields.
@@ -47,7 +50,9 @@
 
 - `runInTerminal` is unsupported.
 - Neovim UI remains lightweight and is not a full IDE-style panel set.
-- Windows uses TCP by default; Named Pipe support is not implemented.
+- Windows is not part of the official beta support matrix.
+- Python 3.8 and 3.9 are not supported.
+- Named Pipe support is not implemented.
 - GDB DAP behavior may vary by version and distribution.
 - Full variable/thread UI is not complete in this beta.
 - No AI debugging assistant behavior is included in this beta.
