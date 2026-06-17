@@ -1,0 +1,2 @@
+[console_scripts]
+magic-debug = main:main

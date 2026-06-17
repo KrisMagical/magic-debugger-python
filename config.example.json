@@ -1,0 +1,27 @@
+{
+  "program": "/tmp/test_sample",
+  "args": [],
+  "cwd": ".",
+  "env": {
+    "EXAMPLE": "1"
+  },
+  "stopAtEntry": false,
+  "gdbPath": "gdb",
+  "rpc_transport": "auto",
+  "rpc_host": "127.0.0.1",
+  "rpc_port": 8766,
+  "rpc_socket_path": null,
+  "server": {
+    "http_host": "127.0.0.1",
+    "http_port": 8765
+  },
+  "vim": {
+    "auto_start_server": true,
+    "server_command": ["magic-debug", "--rpc"],
+    "signs": {
+      "breakpoint": "B",
+      "breakpoint_cond": "C",
+      "current_line": ">"
+    }
+  }
+}

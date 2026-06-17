@@ -1,0 +1,12 @@
+# Magic Debug - Dependencies
+# Python 3.8+
+
+# Core dependencies (stdlib only)
+# No external dependencies required for basic functionality
+
+# Optional development dependencies
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+# black>=23.0.0
+# isort>=5.0.0
+# mypy>=1.0.0
