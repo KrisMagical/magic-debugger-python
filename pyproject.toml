@@ -3,7 +3,7 @@ name = "magic-debug"
 version = "1.0.0"
 description = "GDB Debug Adapter Protocol backend for Vim and Neovim"
 authors = [{ name = "Magic Debug Team" }]
-license = "MIT"
+license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.8"
 keywords = ["gdb", "dap", "debugger", "vim", "neovim", "debugging", "ai"]
