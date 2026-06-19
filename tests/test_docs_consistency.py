@@ -108,6 +108,57 @@ def test_readme_documents_current_limitations():
     assert "not implemented" in content
 
 
+def test_readme_documents_ai_config_without_overclaiming():
+    content = read_readme_lower()
+
+    assert "ai assistant" in content
+    assert "disabled by default" in content
+    assert "magic_debug_ai_api_key" in content
+    assert "configuration layer" in content
+    assert "debug context" in content
+    assert "include_source=false" in content
+    assert "include_variables=false" in content
+    assert "include_source=true" in content
+    assert "include_variables=true" in content
+    assert "max_context_chars" in content
+    assert "automatic" in content
+    assert "debug command" in content
+    assert "automatically modify source code" in content
+    assert "external" in content
+    assert "api unless" in content
+    assert "automatic code fixes are supported" not in content
+    assert "automatically fixes code" not in content
+    assert "automatically executes debug commands" not in content
+    assert "rpc ai methods" in content
+    assert "neovim ai commands are implemented" not in content
+
+
+def test_readme_documents_ai_prompt_and_mock_without_overclaiming():
+    content = read_readme_lower()
+
+    assert "mock ai" in content
+    assert "prompt builder" in content
+    assert "no network access" in content
+    assert "openai-compatible provider implementation" in content
+    assert "magic_debug_ai_api_key" in content
+    assert "disabled by default" in content
+    assert "http ai endpoints" in content
+    assert "rpc ai methods" in content
+    assert "/api/ai/analyze" in content
+    assert "/api/ai/config" in content
+    assert "ai.getconfig" in content
+    assert "ai.analyze" in content
+    assert "api keys as `***`" in content
+    assert "magicdebugaiconfig" in content
+    assert "magicdebugaianalyze" in content
+    assert "magicdebugaiexplainerror" in content
+    assert "magicdebugaisuggestnextstep" in content
+    assert "neovim plugin does not call openai-compatible providers directly" in content
+    assert "http/rpc ai endpoints are implemented" not in content
+    assert "automatically executes debug commands" not in content
+    assert "automatically modifies source" not in content
+
+
 def test_readme_documents_beta_release_materials():
     content = read_readme_lower()
 
@@ -118,6 +169,8 @@ def test_readme_documents_beta_release_materials():
 
 def test_beta_release_documents_exist():
     assert (ROOT / "docs" / "beta-checklist.md").exists()
+    assert (ROOT / "docs" / "ai-beta-validation.md").exists()
+    assert (ROOT / "docs" / "release-draft-v0.1.0-beta.md").exists()
     assert (ROOT / "RELEASE_NOTES.md").exists()
     assert (ROOT / "CHANGELOG.md").exists()
 
@@ -149,6 +202,9 @@ def test_beta_checklist_uses_linux_macos_support_matrix():
     assert "windows tcp smoke" not in content
     assert "should not block" in content
     assert "beta release" in content
+    assert "ai mock validation" in content
+    assert "magicdebugaianalyze" in content
+    assert "ai-beta-validation.md" in content
 
 
 def test_release_notes_and_changelog_describe_support_matrix_update():
@@ -164,3 +220,55 @@ def test_release_notes_and_changelog_describe_support_matrix_update():
     assert "official beta support target is linux/macos" in changelog
     assert "removed windows from the official ci/support matrix" in changelog
     assert "removed python 3.8 and 3.9" in changelog
+
+
+def test_ai_beta_validation_document_exists_and_sets_privacy_boundaries():
+    content = (ROOT / "docs" / "ai-beta-validation.md").read_text(
+        encoding="utf-8"
+    ).lower()
+
+    assert "magicdebugaianalyze" in content
+    assert "magicdebugaiconfig enable-mock" in content
+    assert "api keys are not displayed" in content or "api key masking" in content
+    assert "openai-compatible provider optional validation" in content
+    assert "not a ci requirement" in content
+    assert "ai is disabled by default" in content
+    assert "source code is not included by default" in content
+    assert "variable values are not included by default" in content
+    assert "debug commands are not executed automatically" in content
+    assert "source files are not modified" in content
+
+
+def test_readme_links_ai_beta_validation_and_avoids_ai_overclaims():
+    content = read_readme_lower()
+
+    assert "docs/ai-beta-validation.md" in content
+    assert "disabled by default" in content
+    assert "mock provider" in content
+    assert "openai-compatible provider" in content
+    assert "source snippets and variable values remain disabled by default" in content
+    assert "does not automatically execute debug commands" in content
+    assert "does not automatically modify source code" in content
+    assert "windows official support" not in content
+    assert "ai automatically executes" not in content
+    assert "ai automatically modifies" not in content
+
+
+def test_release_draft_describes_beta_scope_and_ai_privacy():
+    content = (ROOT / "docs" / "release-draft-v0.1.0-beta.md").read_text(
+        encoding="utf-8"
+    ).lower()
+
+    assert "magic debug v0.1.0-beta" in content
+    assert "linux/macos" in content
+    assert "python 3.10-3.12" in content
+    assert "gdb --interpreter=dap" in content
+    assert "ai privacy defaults" in content
+    assert "ai is disabled by default" in content
+    assert "api keys are masked" in content
+    assert "source snippets are disabled by default" in content
+    assert "variable values are disabled by default" in content
+    assert "does not automatically execute debugger commands" in content
+    assert "does not automatically modify source code" in content
+    assert "windows is not officially supported" in content
+    assert "feedback wanted" in content

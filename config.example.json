@@ -11,6 +11,19 @@
   "rpc_host": "127.0.0.1",
   "rpc_port": 8766,
   "rpc_socket_path": null,
+  "ai": {
+    "enabled": false,
+    "provider": "openai-compatible",
+    "model": "",
+    "base_url": "",
+    "api_key": "",
+    "timeout": 30,
+    "max_context_chars": 12000,
+    "include_source": false,
+    "include_variables": false,
+    "include_stack": true,
+    "include_breakpoints": true
+  },
   "server": {
     "http_host": "127.0.0.1",
     "http_port": 8765

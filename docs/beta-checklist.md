@@ -137,6 +137,49 @@ Expected result:
 - Logs are visible with `:MagicDebugLogs`.
 - Response and event messages do not interfere with each other.
 
+## AI Mock Validation
+
+Detailed AI validation lives in [AI Debug Assistant Beta Validation](ai-beta-validation.md).
+
+Start the backend and use the Neovim plugin with the mock provider:
+
+```vim
+:MagicDebugAIConfig
+:MagicDebugAIConfig enable-mock
+:MagicDebugAIAnalyze Why did it stop here?
+:MagicDebugAIExplainError Segmentation fault
+:MagicDebugAISuggestNextStep
+```
+
+Expected result:
+
+- AI results are shown in a floating window or logs buffer.
+- Mock provider validation does not access the network.
+- API keys are not displayed in config output or logs.
+- AI suggestions are not executed automatically.
+- Source code and variable values remain disabled unless explicitly enabled.
+- AI does not execute debugger commands or modify source code.
+- API keys must not be pasted into issues, logs, or screenshots.
+
+## Optional AI OpenAI-Compatible Validation
+
+Only run this with explicit user consent and a test API key:
+
+```bash
+export MAGIC_DEBUG_AI_ENABLED=true
+export MAGIC_DEBUG_AI_PROVIDER=openai-compatible
+export MAGIC_DEBUG_AI_MODEL=your-model
+export MAGIC_DEBUG_AI_BASE_URL=https://api.example.com/v1
+export MAGIC_DEBUG_AI_API_KEY=...
+```
+
+Recommended first pass:
+
+- Keep `include_source=false`.
+- Keep `include_variables=false`.
+- Validate provider failure and timeout messages.
+- Do not paste API keys into issues, logs, or screenshots.
+
 ## Optional Future Validation
 
 Windows is not part of the `v0.1.0-beta` official support matrix. TCP transport
@@ -160,3 +203,5 @@ beta release.
 | wheel install | pass/fail | |
 | minimal C sample | pass/fail/not tested | |
 | Neovim plugin | pass/fail/not tested | |
+| AI mock validation | pass/fail/not tested | |
+| AI OpenAI-compatible optional validation | pass/fail/not tested | |

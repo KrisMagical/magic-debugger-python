@@ -27,3 +27,10 @@ def test_pyproject_declares_supported_python_versions():
     assert "Programming Language :: Python :: 3.10" in content
     assert "Programming Language :: Python :: 3.11" in content
     assert "Programming Language :: Python :: 3.12" in content
+
+
+def test_pyproject_packages_include_ai_package():
+    content = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
+
+    assert 'packages = ["ai", "core", "adapters", "server"]' in content
+    assert (ROOT / "ai" / "config.py").exists()

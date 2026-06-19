@@ -43,7 +43,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["core", "adapters", "server"]
+packages = ["ai", "core", "adapters", "server"]
 py-modules = ["main"]
 
 [tool.setuptools.data-files]

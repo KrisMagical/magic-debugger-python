@@ -10,6 +10,19 @@ local default_config = {
     auto_start_server = true,
     server_command = { "magic-debug", "--rpc" },
     request_timeout = 5000,
+    ai = {
+        enabled = false,
+        provider = "mock",
+        model = "mock-debugger",
+        base_url = "",
+        api_key = "",
+        timeout = 30,
+        max_context_chars = 12000,
+        include_source = false,
+        include_variables = false,
+        include_stack = true,
+        include_breakpoints = true,
+    },
     signs = {
         breakpoint = "B",
         breakpoint_cond = "C",
@@ -745,6 +758,212 @@ function M.get_variables(variables_reference)
     return nil
 end
 
+local function ai_error_message(response, fallback)
+    local err = response and response.error
+    if err and err.code == "AI_DISABLED" then
+        return "AI assistant is disabled. Enable it with config or use mock provider for local validation."
+    end
+    if err and err.code == "AI_CONFIG_ERROR" then
+        return err.message or "AI configuration is invalid. Check model, base_url, and api_key."
+    end
+    if err and err.code == "AI_PROVIDER_ERROR" then
+        return err.message or "AI provider call failed."
+    end
+    if err and err.code == "METHOD_NOT_FOUND" then
+        return "AI RPC method is unavailable. The Magic Debug backend may be too old."
+    end
+    if err and err.message then
+        return err.message
+    end
+    return fallback or "AI request failed"
+end
+
+local function notify_ai_error(response, fallback)
+    local message = ai_error_message(response, fallback)
+    log("error", message, response and response.error)
+end
+
+local function show_ai_result(title, result)
+    local lines = { "# " .. title, "" }
+    local analysis = result and result.analysis or nil
+    if analysis and analysis ~= "" then
+        for _, line in ipairs(vim.split(tostring(analysis), "\n", { plain = true })) do
+            table.insert(lines, line)
+        end
+    else
+        table.insert(lines, "No AI analysis returned.")
+    end
+
+    table.insert(lines, "")
+    table.insert(lines, "AI output is advisory. Magic Debug did not execute commands or modify source code.")
+
+    local buf = vim.api.nvim_create_buf(false, true)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    vim.bo[buf].buftype = "nofile"
+    vim.bo[buf].bufhidden = "wipe"
+    vim.bo[buf].filetype = "markdown"
+
+    local width = math.min(math.floor(vim.o.columns * 0.75), 100)
+    local height = math.min(math.max(#lines + 2, 10), math.floor(vim.o.lines * 0.7))
+    local row = math.floor((vim.o.lines - height) / 2)
+    local col = math.floor((vim.o.columns - width) / 2)
+
+    local ok, win = pcall(vim.api.nvim_open_win, buf, true, {
+        relative = "editor",
+        width = width,
+        height = height,
+        row = row,
+        col = col,
+        style = "minimal",
+        border = "rounded",
+        title = " " .. title .. " ",
+        title_pos = "center",
+    })
+    if not ok then
+        vim.cmd("botright split")
+        win = vim.api.nvim_get_current_win()
+        vim.api.nvim_win_set_buf(win, buf)
+    end
+
+    vim.keymap.set("n", "q", function()
+        if vim.api.nvim_win_is_valid(win) then
+            vim.api.nvim_win_close(win, true)
+        end
+    end, { buffer = buf })
+
+    log("info", title, { analysis = analysis })
+end
+
+local function show_ai_config(config)
+    local lines = { "# AI Config", "" }
+    local safe = vim.deepcopy(config or {})
+    if safe.api_key and safe.api_key ~= "" then
+        safe.api_key = "***"
+    end
+    for _, key in ipairs({
+        "enabled",
+        "provider",
+        "model",
+        "base_url",
+        "api_key",
+        "timeout",
+        "max_context_chars",
+        "include_source",
+        "include_variables",
+        "include_stack",
+        "include_breakpoints",
+    }) do
+        table.insert(lines, string.format("%s: %s", key, vim.inspect(safe[key])))
+    end
+    show_ai_result("AI Config", { analysis = table.concat(lines, "\n") })
+end
+
+local function ai_get_config(callback)
+    if not connect() then
+        log("error", "AI request requires RPC connection. Run :MagicDebugReconnect or start the server.")
+        return nil
+    end
+    return rpc_call("ai.getConfig", {}, callback)
+end
+
+local function ai_update_config(updates, callback)
+    if not connect() then
+        log("error", "AI request requires RPC connection. Run :MagicDebugReconnect or start the server.")
+        return nil
+    end
+    return rpc_call("ai.updateConfig", updates or {}, callback)
+end
+
+local function ai_analyze(question, callback)
+    if not connect() then
+        log("error", "AI request requires RPC connection. Run :MagicDebugReconnect or start the server.")
+        return nil
+    end
+    return rpc_call("ai.analyze", { question = question or "" }, callback)
+end
+
+local function ai_explain_error(error_text, callback)
+    if not connect() then
+        log("error", "AI request requires RPC connection. Run :MagicDebugReconnect or start the server.")
+        return nil
+    end
+    return rpc_call("ai.explainError", { error = error_text or "" }, callback)
+end
+
+local function ai_suggest_next_step(callback)
+    if not connect() then
+        log("error", "AI request requires RPC connection. Run :MagicDebugReconnect or start the server.")
+        return nil
+    end
+    return rpc_call("ai.suggestNextStep", {}, callback)
+end
+
+function M.ai_config(mode)
+    if mode == "enable-mock" then
+        local updates = vim.tbl_deep_extend("force", {
+            enabled = true,
+            provider = "mock",
+            model = "mock-debugger",
+            base_url = "mock://local",
+            api_key = "local-test",
+            include_source = false,
+            include_variables = false,
+        }, state.config.ai or {})
+        updates.enabled = true
+        updates.provider = "mock"
+        updates.model = updates.model or "mock-debugger"
+        updates.base_url = updates.base_url ~= "" and updates.base_url or "mock://local"
+        updates.api_key = updates.api_key ~= "" and updates.api_key or "local-test"
+
+        local response = ai_update_config(updates)
+        if response_ok(response) then
+            vim.notify("Magic Debug AI mock provider enabled", vim.log.levels.INFO)
+            show_ai_config(response.result)
+        else
+            notify_ai_error(response, "Failed to update AI config")
+        end
+        return
+    end
+
+    local response = ai_get_config()
+    if response_ok(response) then
+        show_ai_config(response.result)
+    else
+        notify_ai_error(response, "Failed to get AI config")
+    end
+end
+
+function M.ai_analyze(question)
+    local response = ai_analyze(question or "")
+    if response_ok(response) then
+        show_ai_result("AI Analysis", response.result)
+    else
+        notify_ai_error(response, "AI analysis failed")
+    end
+end
+
+function M.ai_explain_error(error_text)
+    if not error_text or error_text == "" then
+        local last = state.logs[#state.logs]
+        error_text = last and last.message or ""
+    end
+    local response = ai_explain_error(error_text)
+    if response_ok(response) then
+        show_ai_result("AI Error Explanation", response.result)
+    else
+        notify_ai_error(response, "AI error explanation failed")
+    end
+end
+
+function M.ai_suggest_next_step()
+    local response = ai_suggest_next_step()
+    if response_ok(response) then
+        show_ai_result("AI Suggested Next Step", response.result)
+    else
+        notify_ai_error(response, "AI next-step suggestion failed")
+    end
+end
+
 function M.get_state()
     return state.debug_state
 end
@@ -912,6 +1131,22 @@ function M.setup(config)
         M.reconnect()
     end, {})
 
+    vim.api.nvim_create_user_command("MagicDebugAIConfig", function(args)
+        M.ai_config(args.args)
+    end, { nargs = "?" })
+
+    vim.api.nvim_create_user_command("MagicDebugAIAnalyze", function(args)
+        M.ai_analyze(args.args)
+    end, { nargs = "*" })
+
+    vim.api.nvim_create_user_command("MagicDebugAIExplainError", function(args)
+        M.ai_explain_error(args.args)
+    end, { nargs = "*" })
+
+    vim.api.nvim_create_user_command("MagicDebugAISuggestNextStep", function()
+        M.ai_suggest_next_step()
+    end, {})
+
     state.augroup = vim.api.nvim_create_augroup("MagicDebug", { clear = true })
 
     vim.api.nvim_create_autocmd("VimLeavePre", {
@@ -931,6 +1166,12 @@ M._test = {
     handle_rpc_response = handle_rpc_response,
     handle_rpc_event = handle_rpc_event,
     on_rpc_data = on_rpc_data,
+    ai_get_config = ai_get_config,
+    ai_update_config = ai_update_config,
+    ai_analyze = ai_analyze,
+    ai_explain_error = ai_explain_error,
+    ai_suggest_next_step = ai_suggest_next_step,
+    show_ai_result = show_ai_result,
     state = state,
 }
 

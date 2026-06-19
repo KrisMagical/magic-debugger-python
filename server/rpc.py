@@ -15,6 +15,7 @@ from typing import Optional, Dict, Any, Callable, List
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from server.ai_api import AIAPIState, unwrap_success_data
 from server.errors import (
     exception_to_error,
     normalize_controller_result,
@@ -155,7 +156,7 @@ class RPCServer:
         server.start("/tmp/magic-debug.sock")
     """
     
-    def __init__(self, controller):
+    def __init__(self, controller, ai_config=None, ai_provider=None):
         """
         初始化 RPC 服务器
         
@@ -163,6 +164,7 @@ class RPCServer:
             controller: DebugController 实例
         """
         self.controller = controller
+        self.ai_api = AIAPIState(controller, ai_config=ai_config, provider=ai_provider)
         self.socket_path: Optional[str] = None
         self.endpoint: Optional[RPCEndpoint] = None
         self._server: Optional[socket.socket] = None
@@ -222,6 +224,13 @@ class RPCServer:
         # 连接检查
         self.register("ping", self._method_ping)
     
+        # AI Assistant
+        self.register("ai.getConfig", self._method_ai_get_config)
+        self.register("ai.updateConfig", self._method_ai_update_config)
+        self.register("ai.analyze", self._method_ai_analyze)
+        self.register("ai.explainError", self._method_ai_explain_error)
+        self.register("ai.suggestNextStep", self._method_ai_suggest_next_step)
+
     def register(self, method: str, handler: Callable):
         """
         注册 RPC 方法
@@ -449,6 +458,21 @@ class RPCServer:
     
     # ============ 服务器管理 ============
     
+    def _method_ai_get_config(self, params: Dict) -> Dict:
+        return unwrap_success_data(self.ai_api.get_config())
+
+    def _method_ai_update_config(self, params: Dict) -> Dict:
+        return unwrap_success_data(self.ai_api.update_config(params))
+
+    def _method_ai_analyze(self, params: Dict) -> Dict:
+        return unwrap_success_data(self.ai_api.analyze(params.get("question")))
+
+    def _method_ai_explain_error(self, params: Dict) -> Dict:
+        return unwrap_success_data(self.ai_api.explain_error(params.get("error")))
+
+    def _method_ai_suggest_next_step(self, params: Dict) -> Dict:
+        return unwrap_success_data(self.ai_api.suggest_next_step())
+
     def _start_unix_legacy(self, socket_path: Optional[str] = None) -> bool:
         """
         启动 RPC 服务器

@@ -16,6 +16,22 @@
 - Fake DAP process test coverage.
 - Packaging workflows and wheel/sdist validation.
 - Beta validation checklist and release notes draft.
+- AI Assistant configuration model with safe API key masking.
+- AI debug context collection layer with privacy-safe defaults.
+- AI prompt builder for debug analysis, error explanation, and next-step
+  suggestions.
+- Mock AI provider for offline tests.
+- AIAnalysisService with disabled-by-default behavior.
+- OpenAI-compatible AI provider implementation using stdlib `urllib`.
+- Provider error handling and API key redaction for AI API failures.
+- HTTP AI endpoints for config, analyze, explain-error, and suggest-next-step.
+- RPC AI methods for config and analysis.
+- AI API responses use safe config output and keep AI disabled by default.
+- Neovim AI commands for config, analyze, explain-error, and suggest-next-step.
+- AI result display and error handling in the Neovim plugin.
+- AI Debug Assistant Beta end-to-end flow.
+- AI validation checklist.
+- Neovim AI command smoke instructions.
 
 ### Fixed
 
@@ -55,5 +71,13 @@
 - Named Pipe support is not implemented.
 - GDB DAP behavior may vary by version and distribution.
 - Full variable/thread UI is not complete in this beta.
-- No AI debugging assistant behavior is included in this beta.
+- External AI API usage requires explicit user configuration.
+- AI output is advisory and does not execute debugger commands or modify source.
 - Real GDB DAP validation requires GCC plus a GDB build with DAP support.
+
+### Security / Privacy
+
+- AI is disabled by default.
+- API keys are masked in config responses and logs.
+- Source and variable context are disabled by default.
+- AI output is advisory and does not execute debugger commands or modify source.

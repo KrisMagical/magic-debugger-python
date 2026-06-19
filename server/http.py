@@ -11,6 +11,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from typing import Optional, Dict, Any, Callable, Type
 
+from server.ai_api import AIAPIState
 from server.errors import (
     error_payload,
     exception_to_error,
@@ -129,7 +130,7 @@ class HTTPAPIServer:
         server.start(port=8765)
     """
     
-    def __init__(self, controller):
+    def __init__(self, controller, ai_config=None, ai_provider=None):
         """
         初始化 HTTP API 服务器
         
@@ -137,6 +138,7 @@ class HTTPAPIServer:
             controller: DebugController 实例
         """
         self.controller = controller
+        self.ai_api = AIAPIState(controller, ai_config=ai_config, provider=ai_provider)
         self.router = Router()
         self._server: Optional[HTTPServer] = None
         self._thread: Optional[threading.Thread] = None
@@ -416,6 +418,28 @@ class HTTPAPIServer:
             self.controller.refresh_state()
             return {"success": True}
     
+        # ============ AI Assistant ============
+
+        @self.router.get("/api/ai/config")
+        def ai_get_config(query):
+            return self.ai_api.get_config()
+
+        @self.router.post("/api/ai/config")
+        def ai_update_config(data):
+            return self.ai_api.update_config(data)
+
+        @self.router.post("/api/ai/analyze")
+        def ai_analyze(data):
+            return self.ai_api.analyze(data.get("question"))
+
+        @self.router.post("/api/ai/explain-error")
+        def ai_explain_error(data):
+            return self.ai_api.explain_error(data.get("error"))
+
+        @self.router.post("/api/ai/suggest-next-step")
+        def ai_suggest_next_step(data):
+            return self.ai_api.suggest_next_step()
+
     def start(self, host: str = "127.0.0.1", port: int = 8765) -> bool:
         """
         启动 HTTP 服务器

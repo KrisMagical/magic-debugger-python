@@ -267,6 +267,141 @@ Fields:
 - `rpc_port`: TCP RPC port.
 - `rpc_socket_path`: Unix socket path.
 
+## AI Assistant Beta Configuration
+
+AI Assistant support currently includes a safe configuration layer, a read-only
+Debug context collection layer, prompt builders, an offline Mock AI analysis
+service, and an OpenAI-compatible Provider implementation at the internal
+provider/service layer. HTTP/RPC endpoints and Neovim commands are connected,
+so the AI beta flow is end-to-end for manual validation. AI is disabled by
+default, and Magic Debug will not call an external AI API unless the user
+explicitly enables AI and configures a provider.
+
+Recommended environment variables:
+
+```bash
+export MAGIC_DEBUG_AI_ENABLED=true
+export MAGIC_DEBUG_AI_PROVIDER=openai-compatible
+export MAGIC_DEBUG_AI_MODEL=your-model
+export MAGIC_DEBUG_AI_BASE_URL=https://api.example.com/v1
+export MAGIC_DEBUG_AI_API_KEY=...
+```
+
+Configuration file example:
+
+```json
+{
+  "ai": {
+    "enabled": false,
+    "provider": "openai-compatible",
+    "model": "",
+    "base_url": "",
+    "api_key": "",
+    "timeout": 30,
+    "max_context_chars": 12000,
+    "include_source": false,
+    "include_variables": false,
+    "include_stack": true,
+    "include_breakpoints": true
+  }
+}
+```
+
+API keys are intended to come from environment variables such as
+`MAGIC_DEBUG_AI_API_KEY`; do not commit real keys to `magic-debug.json`.
+The safe config representation masks API keys. By default, AI context options do
+not include source text or variable values:
+
+- `include_source=false`
+- `include_variables=false`
+
+The Debug context builder can collect the current debug status, stopped reason,
+stack summary, breakpoint summary, recent error, and launch information without
+sending DAP requests or changing debugger state. Source snippets and variable
+summaries are opt-in with:
+
+- `include_source=true`
+- `include_variables=true`
+
+Collected context is capped by `max_context_chars` and may be truncated before a
+future prompt layer receives it.
+
+The Prompt builder can prepare debug analysis, error explanation, and suggested
+next-step prompts from the redacted Debug context. The Mock AI provider is for
+offline tests only; it is deterministic and has no network access.
+
+The OpenAI-compatible Provider uses Chat Completions style requests with
+`model`, `base_url`, `api_key`, and `timeout` from configuration. API keys should
+be provided through `MAGIC_DEBUG_AI_API_KEY`; tests use mocked network calls and
+do not access real external services.
+
+For offline local validation, use the mock provider:
+
+```json
+{
+  "ai": {
+    "enabled": true,
+    "provider": "mock",
+    "model": "mock-debugger",
+    "base_url": "mock://local",
+    "api_key": "local-test"
+  }
+}
+```
+
+HTTP AI endpoints are available from the backend:
+
+- `GET /api/ai/config`
+- `POST /api/ai/config`
+- `POST /api/ai/analyze`
+- `POST /api/ai/explain-error`
+- `POST /api/ai/suggest-next-step`
+
+Example HTTP analysis request:
+
+```json
+{
+  "question": "Why did the program stop here?"
+}
+```
+
+RPC AI methods are available with the same response/error envelope as other RPC
+calls:
+
+- `ai.getConfig`
+- `ai.updateConfig`
+- `ai.analyze`
+- `ai.explainError`
+- `ai.suggestNextStep`
+
+Neovim AI commands call those backend RPC methods:
+
+- `:MagicDebugAIConfig`
+- `:MagicDebugAIConfig enable-mock`
+- `:MagicDebugAIAnalyze Why did the program stop here?`
+- `:MagicDebugAIExplainError Segmentation fault`
+- `:MagicDebugAISuggestNextStep`
+
+The Neovim plugin does not call OpenAI-compatible providers directly. It only
+talks to the Magic Debug backend over RPC and displays the backend response in a
+floating window or logs buffer.
+
+Config responses mask API keys as `***`; they never return the plain API key.
+Runtime config updates are in-memory for the current server process. For
+persistent configuration, use environment variables or `magic-debug.json`.
+When `openai-compatible` is enabled, the selected Debug context is sent to the
+configured `base_url`. The mock provider does not access the network.
+
+Current user-facing AI limitations:
+
+- Magic Debug does not automatically execute debug commands.
+- Magic Debug does not automatically modify source code.
+- Source snippets and variable values remain disabled by default.
+- AI output is advisory.
+
+For release validation and privacy checks, see
+[docs/ai-beta-validation.md](docs/ai-beta-validation.md).
+
 ## RPC Transport
 
 `auto`:
